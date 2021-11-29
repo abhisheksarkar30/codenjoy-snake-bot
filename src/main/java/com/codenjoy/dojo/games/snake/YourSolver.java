@@ -42,7 +42,7 @@ import java.util.Set;
  */
 public class YourSolver implements Solver<Board> {
 
-    private Dice dice;
+    private final Dice dice;
     private Board board;
     //    private static List<Point> WALLS;
     private static Set<Point> visited = new HashSet<>();
@@ -59,49 +59,46 @@ public class YourSolver implements Solver<Board> {
             return Direction.RIGHT.toString();
         Direction direction = board.getSnakeDirection();
 
-        List<Point> barriers = board.getBarriers();
-        barriers.addAll(board.getSnake());
-
         Point greenApple = board.getApples().get(0);
 
-        Point nextAhead = board.getNextHeadAhead(head,direction);
-        Point nextLeft = board.getNextLeft(head,direction);
-        Point nextRight = board.getNextRight(head, direction);
+        Point nextAhead = head.copy();
+        nextAhead.move(direction);
+        Point nextLeftPt = head.copy();
+        Direction nextLeftDir = direction.counterClockwise();
+        nextLeftPt.move(nextLeftDir);
+        Point nextRightPt = head.copy();
+        Direction nextRightDir = direction.clockwise();
+        nextRightPt.move(nextRightDir);
 
-        double distAhead = barriers.contains(nextAhead)? 999999999 : calculateDistance(greenApple, nextAhead);
-        double distLeft = barriers.contains(nextLeft)? 999999999 : calculateDistance(greenApple, nextLeft);
-        double distRight = barriers.contains(nextRight)? 999999999 : calculateDistance(greenApple, nextRight);
+        double distAhead = calculateDistance(greenApple, nextAhead, direction);
+        double distLeft = calculateDistance(greenApple, nextLeftPt, nextLeftDir);
+        double distRight = calculateDistance(greenApple, nextRightPt, nextRightDir);
 
-        return distAhead > distLeft? distLeft > distRight? moveNextRight(direction) : moveNextLeft(direction) :
-                distAhead > distRight? moveNextRight(direction) : direction.toString();
-    }
+        Direction nextDirection = distAhead > distLeft? distLeft > distRight? direction.clockwise() :
+                direction.counterClockwise() : distAhead > distRight? direction.clockwise() : direction;
 
-    private double calculateDistance(Point greenApple, Point nextAhead) {
-        int rX = greenApple.getX() - nextAhead.getX();
-        int rY = greenApple.getY() - nextAhead.getY();
-        return Math.sqrt(rX*rX + rY*rY);
-    }
-
-    private String moveNextLeft(Direction direction) {
-        Direction nextDirection = Direction.RIGHT;
-        switch(direction) {
-            case UP: nextDirection = Direction.LEFT;break;
-            case LEFT: nextDirection = Direction.DOWN; break;
-            case RIGHT: nextDirection = Direction.UP; break;
-            case DOWN: nextDirection = Direction.RIGHT; break;
-        }
         return nextDirection.toString();
     }
 
-    private String moveNextRight(Direction direction) {
-        Direction nextDirection = Direction.RIGHT;
-        switch (direction) {
-            case UP: nextDirection = Direction.RIGHT; break;
-            case LEFT: nextDirection = Direction.UP; break;
-            case RIGHT: nextDirection = Direction.DOWN; break;
-            case DOWN: nextDirection = Direction.LEFT; break;
-        }
-        return nextDirection.toString();
+    private double calculateDistance(Point greenApple, Point head, Direction direction) {
+        List<Point> barriers = board.getBarriers();
+        List<Point> snakeBody = board.getSnake();
+        barriers.addAll(snakeBody);
+
+        if(barriers.contains(head))
+            return 999999999;
+
+        Point nextLeftPt = head.copy();
+        Direction nextLeftDir = direction.counterClockwise();
+        nextLeftPt.move(nextLeftDir);//board.getNextLeft(head,direction);
+        Point nextRightPt = head.copy();
+        Direction nextRightDir = direction.clockwise();
+        nextRightPt.move(nextRightDir);//board.getNextRight(head, direction);
+
+        if(!snakeBody.contains(nextLeftPt) || !snakeBody.contains(nextRightPt))
+            return greenApple.distance(head);
+        else
+            return 999999998;
     }
 
 }
