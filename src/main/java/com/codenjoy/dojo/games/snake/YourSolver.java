@@ -1,0 +1,107 @@
+package com.codenjoy.dojo.games.snake;
+
+/*-
+ * #%L
+ * Codenjoy - it's a dojo-like platform from developers to developers.
+ * %%
+ * Copyright (C) 2018 Codenjoy
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-3.0.html>.
+ * #L%
+ */
+
+
+import com.codenjoy.dojo.client.Solver;
+import com.codenjoy.dojo.services.Dice;
+import com.codenjoy.dojo.services.Direction;
+import com.codenjoy.dojo.services.Point;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * Author: your name
+ *
+ * This is your AI algorithm for the game.
+ * Implement it at your own discretion.
+ * Pay attention to {@see YourSolverTest} - there is
+ * a test framework for you.
+ */
+public class YourSolver implements Solver<Board> {
+
+    private Dice dice;
+    private Board board;
+    //    private static List<Point> WALLS;
+    private static Set<Point> visited = new HashSet<>();
+
+    public YourSolver(Dice dice) {
+        this.dice = dice;
+    }
+
+    @Override
+    public String get(Board board) {
+        this.board = board;
+        Point head = board.getHead();
+        if(head == null)
+            return Direction.RIGHT.toString();
+        Direction direction = board.getSnakeDirection();
+
+        List<Point> barriers = board.getBarriers();
+        barriers.addAll(board.getSnake());
+
+        Point greenApple = board.getApples().get(0);
+
+        Point nextAhead = board.getNextHeadAhead(head,direction);
+        Point nextLeft = board.getNextLeft(head,direction);
+        Point nextRight = board.getNextRight(head, direction);
+
+        double distAhead = barriers.contains(nextAhead)? 999999999 : calculateDistance(greenApple, nextAhead);
+        double distLeft = barriers.contains(nextLeft)? 999999999 : calculateDistance(greenApple, nextLeft);
+        double distRight = barriers.contains(nextRight)? 999999999 : calculateDistance(greenApple, nextRight);
+
+        return distAhead > distLeft? distLeft > distRight? moveNextRight(direction) : moveNextLeft(direction) :
+                distAhead > distRight? moveNextRight(direction) : direction.toString();
+    }
+
+    private double calculateDistance(Point greenApple, Point nextAhead) {
+        int rX = greenApple.getX() - nextAhead.getX();
+        int rY = greenApple.getY() - nextAhead.getY();
+        return Math.sqrt(rX*rX + rY*rY);
+    }
+
+    private String moveNextLeft(Direction direction) {
+        Direction nextDirection = Direction.RIGHT;
+        switch(direction) {
+            case UP: nextDirection = Direction.LEFT;break;
+            case LEFT: nextDirection = Direction.DOWN; break;
+            case RIGHT: nextDirection = Direction.UP; break;
+            case DOWN: nextDirection = Direction.RIGHT; break;
+        }
+        return nextDirection.toString();
+    }
+
+    private String moveNextRight(Direction direction) {
+        Direction nextDirection = Direction.RIGHT;
+        switch (direction) {
+            case UP: nextDirection = Direction.RIGHT; break;
+            case LEFT: nextDirection = Direction.UP; break;
+            case RIGHT: nextDirection = Direction.DOWN; break;
+            case DOWN: nextDirection = Direction.LEFT; break;
+        }
+        return nextDirection.toString();
+    }
+
+}
