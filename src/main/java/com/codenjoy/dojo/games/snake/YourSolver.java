@@ -83,17 +83,18 @@ public class YourSolver implements Solver<Board> {
     private double calculateDistance(Point greenApple, Point head, Direction direction) {
         List<Point> barriers = board.getBarriers();
         List<Point> snakeBody = board.getSnake();
-        barriers.addAll(snakeBody);
 
-        if(barriers.contains(head))
+        if(board.getStones().contains(head))
+            return 999999997;
+        else if(barriers.contains(head))
             return 999999999;
 
         Point nextLeftPt = head.copy();
         Direction nextLeftDir = direction.counterClockwise();
-        nextLeftPt.move(nextLeftDir);//board.getNextLeft(head,direction);
+        nextLeftPt.move(nextLeftDir);
         Point nextRightPt = head.copy();
         Direction nextRightDir = direction.clockwise();
-        nextRightPt.move(nextRightDir);//board.getNextRight(head, direction);
+        nextRightPt.move(nextRightDir);
 
         if(!snakeBody.contains(nextLeftPt) || !snakeBody.contains(nextRightPt))
             return greenApple.distance(head);
