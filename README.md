@@ -1,0 +1,1 @@
+# codenjoy-snake-bot
