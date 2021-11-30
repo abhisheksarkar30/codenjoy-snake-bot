@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Author: your name
+ * Author: Abhishek Sarkar
  *
  * This is your AI algorithm for the game.
  * Implement it at your own discretion.
@@ -42,10 +42,8 @@ import java.util.Set;
  */
 public class YourSolver implements Solver<Board> {
 
-    private final Dice dice;
+    private Dice dice;
     private Board board;
-    //    private static List<Point> WALLS;
-    private static Set<Point> visited = new HashSet<>();
 
     public YourSolver(Dice dice) {
         this.dice = dice;
@@ -54,52 +52,32 @@ public class YourSolver implements Solver<Board> {
     @Override
     public String get(Board board) {
         this.board = board;
-        Point head = board.getHead();
-        if(head == null)
+        Point currentHead = board.getHead();
+        if(currentHead == null)
             return Direction.RIGHT.toString();
-        Direction direction = board.getSnakeDirection();
+        Direction currentDir = board.getSnakeDirection();
 
         Point greenApple = board.getApples().get(0);
 
-        Point nextAhead = head.copy();
-        nextAhead.move(direction);
-        Point nextLeftPt = head.copy();
-        Direction nextLeftDir = direction.counterClockwise();
-        nextLeftPt.move(nextLeftDir);
-        Point nextRightPt = head.copy();
-        Direction nextRightDir = direction.clockwise();
-        nextRightPt.move(nextRightDir);
+        Point nextAhead = board.getNextHeadAhead(currentHead,currentDir);
+        Point nextLeft = board.getNextLeft(currentHead,currentDir);
+        Point nextRight = board.getNextRight(currentHead, currentDir);
 
-        double distAhead = calculateDistance(greenApple, nextAhead, direction);
-        double distLeft = calculateDistance(greenApple, nextLeftPt, nextLeftDir);
-        double distRight = calculateDistance(greenApple, nextRightPt, nextRightDir);
+        double distAhead = calculateDistance(greenApple, nextAhead);
+        double distLeft = calculateDistance(greenApple, nextLeft);
+        double distRight = calculateDistance(greenApple, nextRight);
 
-        Direction nextDirection = distAhead > distLeft? distLeft > distRight? direction.clockwise() :
-                direction.counterClockwise() : distAhead > distRight? direction.clockwise() : direction;
+        Direction nextDir = distAhead > distLeft? distLeft > distRight? currentDir.clockwise() :
+                currentDir.counterClockwise() : distAhead > distRight? currentDir.clockwise() : currentDir;
 
-        return nextDirection.toString();
+        return nextDir.toString();
     }
 
-    private double calculateDistance(Point greenApple, Point head, Direction direction) {
-        List<Point> barriers = board.getBarriers();
-        List<Point> snakeBody = board.getSnake();
-
-        if(board.getStones().contains(head))
-            return 999999997;
-        else if(barriers.contains(head))
+    private double calculateDistance(Point greenApple, Point tempHead) {
+        if(board.getBarriers().contains(tempHead))
             return 999999999;
 
-        Point nextLeftPt = head.copy();
-        Direction nextLeftDir = direction.counterClockwise();
-        nextLeftPt.move(nextLeftDir);
-        Point nextRightPt = head.copy();
-        Direction nextRightDir = direction.clockwise();
-        nextRightPt.move(nextRightDir);
-
-        if(!snakeBody.contains(nextLeftPt) || !snakeBody.contains(nextRightPt))
-            return greenApple.distance(head);
-        else
-            return 999999998;
+        return greenApple.distance(tempHead);
     }
 
 }
