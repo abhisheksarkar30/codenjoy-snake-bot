@@ -27,10 +27,10 @@ import com.codenjoy.dojo.client.Solver;
 import com.codenjoy.dojo.services.Dice;
 import com.codenjoy.dojo.services.Direction;
 import com.codenjoy.dojo.services.Point;
+import com.codenjoy.dojo.services.PointImpl;
+import com.google.common.collect.Lists;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Author: Abhishek Sarkar
@@ -45,39 +45,111 @@ public class YourSolver implements Solver<Board> {
     private Dice dice;
     private Board board;
 
+    private List<Point> barriers, walls, stones, snakeBody;
+    private Point greenApple;
+
     public YourSolver(Dice dice) {
         this.dice = dice;
     }
 
     @Override
     public String get(Board board) {
+        long startTime = System.currentTimeMillis();
+
         this.board = board;
         Point currentHead = board.getHead();
         if(currentHead == null)
             return Direction.RIGHT.toString();
+
+        barriers = Lists.newArrayList();
+        barriers.addAll(walls = board.getWalls());
+        barriers.addAll(stones = board.getStones());
+        barriers.addAll(snakeBody = board.getSnake());
+        greenApple = board.getApples().get(0);
         Direction currentDir = board.getSnakeDirection();
 
-        Point greenApple = board.getApples().get(0);
+        Direction nextDir = getNextDirection(currentHead, currentDir);
 
-        Point nextAhead = board.getNextHeadAhead(currentHead,currentDir);
-        Point nextLeft = board.getNextLeft(currentHead,currentDir);
-        Point nextRight = board.getNextRight(currentHead, currentDir);
-
-        double distAhead = calculateDistance(greenApple, nextAhead);
-        double distLeft = calculateDistance(greenApple, nextLeft);
-        double distRight = calculateDistance(greenApple, nextRight);
-
-        Direction nextDir = distAhead > distLeft? distLeft > distRight? currentDir.clockwise() :
-                currentDir.counterClockwise() : distAhead > distRight? currentDir.clockwise() : currentDir;
+        System.out.println("Time taken(ms) : " + (System.currentTimeMillis() - startTime));
 
         return nextDir.toString();
     }
 
-    private double calculateDistance(Point greenApple, Point tempHead) {
-        if(board.getBarriers().contains(tempHead))
-            return 999999999;
+    private Direction getNextDirection(Point currentHead, Direction currentDir) {
+        Point nextAhead = getNextHeadAhead(currentHead, currentDir);
+        Direction nextLeftDir = currentDir.counterClockwise();
+        Point nextLeft = getNextHeadLeft(currentHead, currentDir);
+        Direction nextRightDir = currentDir.clockwise();
+        Point nextRight = getNextHeadRight(currentHead, currentDir);
+
+        double distAhead = calculateDistanceFromGreenApple(nextAhead, currentDir, false);
+        double distLeft = calculateDistanceFromGreenApple(nextLeft, nextLeftDir, false);
+        double distRight = calculateDistanceFromGreenApple(nextRight, nextRightDir, false);
+
+        return distAhead > distLeft? distLeft > distRight? nextRightDir : nextLeftDir :
+                distAhead > distRight? nextRightDir : currentDir;
+    }
+
+    private double calculateDistanceFromGreenApple(Point tempHead, Direction tempDir, boolean avoidStones) {
+        if(!avoidStones && stones.contains(tempHead))
+            return 999999996;//Left as one of the last options but better than going trapped inside own body
+        else if(walls.contains(tempHead))
+            return 999999998;//Directly blocked passage
+        else if(snakeBody.contains(tempHead))
+            return 999999999;//Directly blocked passage
+
+        Point nextLeftPt = getNextHeadLeft(tempHead,tempDir);
+        Point nextRightPt = getNextHeadRight(tempHead, tempDir);
+
+        if(!snakeBody.contains(nextLeftPt) || !snakeBody.contains(nextRightPt))
+            return greenApple.distance(tempHead);
+        else {
+            Point nextHead = getNextHeadAhead(tempHead, tempDir);
+            if(!greenApple.itsMe(nextHead) &&
+                    calculateDistanceFromGreenApple(nextHead, tempDir, true) == 999999999)
+                return 999999999;
+        }
 
         return greenApple.distance(tempHead);
+    }
+
+    public Point getNextHeadAhead(Point currentHead, Direction direction) {
+        Point nextHead;
+        switch(direction) {
+            case LEFT : nextHead = new PointImpl(currentHead.getX()-1, currentHead.getY()); break;
+            case RIGHT : nextHead = new PointImpl(currentHead.getX()+1, currentHead.getY()); break;
+            case UP : nextHead = new PointImpl(currentHead.getX(), currentHead.getY()+1); break;
+            case DOWN : nextHead = new PointImpl(currentHead.getX(), currentHead.getY()-1); break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + direction);
+        }
+        return nextHead;
+    }
+
+    public Point getNextHeadLeft(Point currentHead, Direction direction) {
+        Point nextHead;
+        switch(direction) {
+            case LEFT : nextHead = new PointImpl(currentHead.getX(), currentHead.getY()-1); break;
+            case RIGHT : nextHead = new PointImpl(currentHead.getX(), currentHead.getY()+1); break;
+            case UP : nextHead = new PointImpl(currentHead.getX()-1, currentHead.getY()); break;
+            case DOWN : nextHead = new PointImpl(currentHead.getX()+1, currentHead.getY()); break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + direction);
+        }
+        return nextHead;
+    }
+
+    public Point getNextHeadRight(Point currentHead, Direction direction) {
+        Point nextHead;
+        switch(direction) {
+            case LEFT : nextHead = new PointImpl(currentHead.getX(), currentHead.getY()+1); break;
+            case RIGHT : nextHead = new PointImpl(currentHead.getX(), currentHead.getY()-1); break;
+            case UP : nextHead = new PointImpl(currentHead.getX()+1, currentHead.getY()); break;
+            case DOWN : nextHead = new PointImpl(currentHead.getX()-1, currentHead.getY()); break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + direction);
+        }
+        return nextHead;
     }
 
 }

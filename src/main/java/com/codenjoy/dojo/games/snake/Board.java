@@ -68,45 +68,6 @@ public class Board extends AbstractBoard<Element> {
         }
     }
 
-    public  Point getNextHeadAhead(Point currentHead, Direction direction){
-        Point nextHead;
-        switch(direction) {
-            case LEFT : nextHead = new PointImpl(currentHead.getX()-1, currentHead.getY()); break;
-            case RIGHT : nextHead = new PointImpl(currentHead.getX()+1, currentHead.getY()); break;
-            case UP : nextHead = new PointImpl(currentHead.getX(), currentHead.getY()+1); break;
-            case DOWN : nextHead = new PointImpl(currentHead.getX(), currentHead.getY()-1); break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + direction);
-        }
-        return nextHead;
-    }
-
-    public  Point getNextLeft(Point currentHead, Direction direction){
-        Point nextHead;
-        switch(direction) {
-            case LEFT : nextHead = new PointImpl(currentHead.getX(), currentHead.getY()-1); break;
-            case RIGHT : nextHead = new PointImpl(currentHead.getX(), currentHead.getY()+1); break;
-            case UP : nextHead = new PointImpl(currentHead.getX()-1, currentHead.getY()); break;
-            case DOWN : nextHead = new PointImpl(currentHead.getX()+1, currentHead.getY()); break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + direction);
-        }
-        return nextHead;
-    }
-
-    public  Point getNextRight(Point currentHead, Direction direction){
-        Point nextHead;
-        switch(direction) {
-            case LEFT : nextHead = new PointImpl(currentHead.getX(), currentHead.getY()+1); break;
-            case RIGHT : nextHead = new PointImpl(currentHead.getX(), currentHead.getY()-1); break;
-            case UP : nextHead = new PointImpl(currentHead.getX()+1, currentHead.getY()); break;
-            case DOWN : nextHead = new PointImpl(currentHead.getX()-1, currentHead.getY()); break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + direction);
-        }
-        return nextHead;
-    }
-
     public Point getHead() {
         List<Point> result = get(
                 HEAD_UP,
@@ -172,7 +133,6 @@ public class Board extends AbstractBoard<Element> {
     }
 
     public List<Point> getWalls() {
-        if(walls == null) walls = get(Element.BREAK);
-        return walls;
+        return get(Element.BREAK);
     }
 }
